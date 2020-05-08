@@ -144,27 +144,28 @@ def rotateBand2(x, R):
 
     return dst
 
-def render_prt_ortho(out_path, folder_name, subject_name, shs, rndr, rndr_uv, angl_step=4, n_light=1, pitch=[0]):
+def render_prt_ortho(out_path, obj_path, subject_name, shs, rndr, rndr_uv, angl_step=4, n_light=1, pitch=[0]):
     cam = Camera(width=512, height=512)
     cam.ortho_ratio = 0.4
     cam.near = -100
     cam.far = 100
     cam.sanity_check()
 
+    dir_path = os.path.dirname(obj_path)
     # set path for obj, prt
-    mesh_file = os.path.join(folder_name, subject_name + '_100k.obj')
+    mesh_file = obj_path
     if not os.path.exists(mesh_file):
         print('ERROR: obj file does not exist!!', mesh_file)
         return 
-    prt_file = os.path.join(folder_name, 'bounce', 'bounce0.txt')
+    prt_file = os.path.join(dir_path, 'bounce', 'bounce0.txt')
     if not os.path.exists(prt_file):
         print('ERROR: prt file does not exist!!!', prt_file)
         return
-    face_prt_file = os.path.join(folder_name, 'bounce', 'face.npy')
+    face_prt_file = os.path.join(dir_path, 'bounce', 'face.npy')
     if not os.path.exists(face_prt_file):
         print('ERROR: face prt file does not exist!!!', prt_file)
         return
-    text_file = os.path.join(folder_name, 'tex', subject_name + '_dif_2k.jpg')
+    text_file = os.path.join(dir_path, 'tex', subject_name + '_dif_2k.jpg')
     if not os.path.exists(text_file):
         print('ERROR: dif file does not exist!!', text_file)
         return             
@@ -269,7 +270,7 @@ if __name__ == '__main__':
     shs = np.load('./env_sh.npy')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', type=str, default='/home/shunsuke/Downloads/rp_dennis_posed_004_OBJ')
+    parser.add_argument('-i', '--input', type=str, default='/home/shunsuke/Downloads/rp_dennis_posed_004_OBJ/rp_dennis_posed_004_100k.obj')
     parser.add_argument('-o', '--out_dir', type=str, default='/home/shunsuke/Documents/hf_human')
     parser.add_argument('-m', '--ms_rate', type=int, default=1, help='higher ms rate results in less aliased output. MESA renderer only supports ms_rate=1.')
     parser.add_argument('-e', '--egl',  action='store_true', help='egl rendering option. use this when rendering with headless server with NVIDIA GPU')
@@ -284,7 +285,5 @@ if __name__ == '__main__':
     rndr = PRTRender(width=args.size, height=args.size, ms_rate=args.ms_rate, egl=args.egl)
     rndr_uv = PRTRender(width=args.size, height=args.size, uv_mode=True, egl=args.egl)
 
-    if args.input[-1] == '/':
-        args.input = args.input[:-1]
-    subject_name = args.input.split('/')[-1][:-4]
+    subject_name = os.path.basename(args.input)[:-(len(os.path.basename(args.input).split('_')[-1])+1)]
     render_prt_ortho(args.out_dir, args.input, subject_name, shs, rndr, rndr_uv, 1, 1, pitch=[0])

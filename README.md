@@ -98,14 +98,72 @@ This tutorial uses `rp_dennis_posed_004` model. Please download the model from [
 
 Warning: the following code becomes extremely slow without [pyembree](https://github.com/scopatz/pyembree). Please make sure you install pyembree.
 
+### Environment
+```
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash ./Miniconda3-latest-Linux-x86_64.sh
+sudo reboot
+```
+```
+conda update -n base -c defaults conda
+conda env remove -n deeplearning
+conda create -n deeplearning
+conda activate deeplearning
+echo "conda activate deeplearning" >> ~/.bashrc
+
+conda install -c conda-forge pyembree
+sudo apt-get install -y openexr libopenexr-dev
+sudo apt-get install -y freeglut3-dev
+
+pip install --upgrade torch torchvision
+pip install --upgrade launchpadlib
+pip install --upgrade testresources
+pip install --upgrade pip
+pip install --upgrade setuptools
+pip install --upgrade numpy
+pip install --upgrade scipy
+pip install --upgrade matplotlib
+pip install --upgrade futures
+pip install --upgrade Pillow
+pip install --upgrade tqdm
+pip install --upgrade cython
+pip install --upgrade scikit-image
+pip install --upgrade pyyaml
+pip install --upgrade trimesh
+pip install --upgrade pyexr
+pip install --upgrade PyOpenGL
+pip install --upgrade PyOpenGL_accelerate
+pip install --upgrade opencv-python
+
+cd
+git clone https://github.com/naisy/PIFu
+cd PIFu
+git checkout dev
+```
+### Data generate
+#### Sample data list
+* https://renderpeople.com/free-3d-people/
+  * https://renderpeople.com/sample/free/rp_fabienne_percy_posed_001_OBJ.zip
+  * https://renderpeople.com/sample/free/rp_mei_posed_001_OBJ.zip
+  * https://renderpeople.com/sample/free/rp_dennis_posed_004_OBJ.zip
+
+```
+mkdir ~/rp_dennis_posed_004_OBJ
+cd ~/rp_dennis_posed_004_OBJ
+wget https://renderpeople.com/sample/free/rp_dennis_posed_004_OBJ.zip
+unzip rp_dennis_posed_004_OBJ.zip
+```
 1. run the following script to compute spherical harmonics coefficients for [precomputed radiance transfer (PRT)](https://sites.fas.harvard.edu/~cs278/papers/prt.pdf). In a nutshell, PRT is used to account for accurate light transport including ambient occlusion without compromising online rendering time, which significantly improves the photorealism compared with [a common sperical harmonics rendering using surface normals](https://cseweb.ucsd.edu/~ravir/papers/envmap/envmap.pdf). This process has to be done once for each obj file.
 ```
-python -m apps.prt_util -i {path_to_rp_dennis_posed_004_OBJ}
+# Processing 1
+cd ~/PIFu
+python -m apps.prt_util -i ~/rp_dennis_posed_004_OBJ/rp_dennis_posed_004_100k.obj
 ```
-
 2. run the following script. Under the specified data path, the code creates folders named `GEO`, `RENDER`, `MASK`, `PARAM`, `UV_RENDER`, `UV_MASK`, `UV_NORMAL`, and `UV_POS`. Note that you may need to list validation subjects to exclude from training in `{path_to_training_data}/val.txt` (this tutorial has only one subject and leave it empty). If you wish to render images with headless servers equipped with NVIDIA GPU, add -e to enable EGL rendering.
 ```
-python -m apps.render_data -i {path_to_rp_dennis_posed_004_OBJ} -o {path_to_training_data} [-e]
+# Processing 2 (A display is required to run the rendering process.)
+# ~/output directory will be the training data's directory
+python -m apps.render_data -i ~/rp_dennis_posed_004_OBJ/rp_dennis_posed_004_100k.obj -o ~/output
 ```
 
 ## Training (Linux Only)
@@ -114,13 +172,38 @@ Warning: the following code becomes extremely slow without [pyembree](https://gi
 
 1. run the following script to train the shape module. The intermediate results and checkpoints are saved under `./results` and `./checkpoints` respectively. You can add `--batch_size` and `--num_sample_input` flags to adjust the batch size and the number of sampled points based on available GPU memory.
 ```
-python -m apps.train_shape --dataroot {path_to_training_data} --random_flip --random_scale --random_trans
+python -m apps.train_shape --dataroot ~/output --random_flip --random_scale --random_trans
 ```
 
 2. run the following script to train the color module. 
 ```
-python -m apps.train_color --dataroot {path_to_training_data} --num_sample_inout 0 --num_sample_color 5000 --sigma 0.1 --random_flip --random_scale --random_trans
+python -m apps.train_color --dataroot ~/output --num_sample_inout 0 --num_sample_color 5000 --sigma 0.1 --random_flip --random_scale --random_trans
 ```
+
+3. copy model files for run
+```
+cd ~/PIFu
+cp checkpoints/example/netG_latest checkpoints/net_G
+cp checkpoints/example/netC_latest checkpoints/net_C
+```
+
+## Run prediction
+Input images. (put your image into this directory before run test.sh)
+```
+ls ./sample_images
+```
+Run
+```
+cd ~/PIFu
+./scripts/test.sh
+```
+Result files
+```
+ls ./results/pifu_demo
+```
+
+## Known issues
+* My trained net_C is different structure. So, test.sh's net_C is comment out.
 
 ## Related Research
 

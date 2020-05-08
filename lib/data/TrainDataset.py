@@ -18,7 +18,9 @@ def load_trimesh(root_dir):
     meshs = {}
     for i, f in enumerate(folders):
         sub_name = f
-        meshs[sub_name] = trimesh.load(os.path.join(root_dir, f, '%s_100k.obj' % sub_name))
+        obj_file = os.listdir(os.path.join(root_dir, f))[0]
+        obj_path = os.path.join(os.path.join(root_dir, f), obj_file)
+        meshs[sub_name] = trimesh.load(obj_path)
 
     return meshs
 
