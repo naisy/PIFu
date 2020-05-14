@@ -161,8 +161,11 @@ python -m apps.prt_util -i ~/rp_dennis_posed_004_OBJ/rp_dennis_posed_004_100k.ob
 ```
 2. run the following script. Under the specified data path, the code creates folders named `GEO`, `RENDER`, `MASK`, `PARAM`, `UV_RENDER`, `UV_MASK`, `UV_NORMAL`, and `UV_POS`. Note that you may need to list validation subjects to exclude from training in `{path_to_training_data}/val.txt` (this tutorial has only one subject and leave it empty). If you wish to render images with headless servers equipped with NVIDIA GPU, add -e to enable EGL rendering.
 ```
-# Processing 2 (A display is required to run the rendering process.)
+# Processing 2
 # ~/output directory will be the training data's directory
+# Headless rendering
+python -m apps.render_data -i ~/rp_dennis_posed_004_OBJ/rp_dennis_posed_004_100k.obj -o ~/output -e
+# Or if you want to see rendering process in your display,
 python -m apps.render_data -i ~/rp_dennis_posed_004_OBJ/rp_dennis_posed_004_100k.obj -o ~/output
 ```
 
