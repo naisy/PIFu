@@ -144,9 +144,9 @@ def rotateBand2(x, R):
 
     return dst
 
-def render_prt_ortho(out_path, obj_path, subject_name, shs, rndr, rndr_uv, angl_step=4, n_light=1, pitch=[0]):
-    cam = Camera(width=512, height=512)
-    cam.ortho_ratio = 0.4
+def render_prt_ortho(out_path, obj_path, subject_name, shs, rndr, rndr_uv, im_size, angl_step=4, n_light=1, pitch=[0]):
+    cam = Camera(width=im_size, height=im_size)
+    cam.ortho_ratio = 0.4 * (512 / im_size)
     cam.near = -100
     cam.far = 100
     cam.sanity_check()
@@ -286,4 +286,4 @@ if __name__ == '__main__':
     rndr_uv = PRTRender(width=args.size, height=args.size, uv_mode=True, egl=args.egl)
 
     subject_name = os.path.basename(args.input)[:-(len(os.path.basename(args.input).split('_')[-1])+1)]
-    render_prt_ortho(args.out_dir, args.input, subject_name, shs, rndr, rndr_uv, 1, 1, pitch=[0])
+    render_prt_ortho(args.out_dir, args.input, subject_name, shs, rndr, rndr_uv, args.size, 1, 1, pitch=[0])
